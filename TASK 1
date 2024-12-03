@@ -1,0 +1,79 @@
+# Importing necessary libraries
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
+
+# Load the Titanic dataset (directly from seaborn's built-in dataset)
+url = 'https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv'
+df = pd.read_csv(url)
+
+# Display the first few rows of the dataset
+df.head()
+
+# Data Exploration
+print("Missing values per column:\n", df.isnull().sum())
+print("\nBasic statistics:\n", df.describe())
+
+# Visualizing the distribution of survival
+sns.countplot(x='Survived', data=df)
+plt.title('Survival Distribution')
+plt.show()
+
+# Fill missing Age values with the median
+df['Age'].fillna(df['Age'].median(), inplace=True)
+
+# Fill missing Embarked values with the mode (most common value)
+df['Embarked'].fillna(df['Embarked'].mode()[0], inplace=True)
+
+# Drop the 'Cabin' column due to too many missing values
+df.drop(columns=['Cabin'], inplace=True)
+
+# Convert categorical variables to numeric values
+df['Sex'] = df['Sex'].map({'male': 0, 'female': 1})
+df['Embarked'] = df['Embarked'].map({'C': 0, 'Q': 1, 'S': 2})
+
+# Selecting features and target
+X = df[['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked']]
+y = df['Survived']
+
+# Split the dataset into training and testing sets (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Standardize the features (optional but helps with some models)
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Initialize the RandomForestClassifier
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+
+# Train the model
+model.fit(X_train_scaled, y_train)
+
+# Make predictions on the test set
+y_pred = model.predict(X_test_scaled)
+
+# Evaluate the model
+print('Accuracy:', accuracy_score(y_test, y_pred))
+print('Classification Report:\n', classification_report(y_test, y_pred))
+print('Confusion Matrix:\n', confusion_matrix(y_test, y_pred))
+
+# Feature importance visualization
+feature_importances = model.feature_importances_
+features = X.columns
+
+# Create a DataFrame to display feature importances
+importance_df = pd.DataFrame({
+    'Feature': features,
+    'Importance': feature_importances
+}).sort_values(by='Importance', ascending=False)
+
+# Plot the feature importance
+sns.barplot(x='Importance', y='Feature', data=importance_df)
+plt.title('Feature Importance')
+plt.show()
