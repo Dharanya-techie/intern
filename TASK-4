@@ -1,1 +1,99 @@
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
+# Download the dataset from Kaggle
+print("Ensure you've uploaded the 'Advertising.csv' dataset from Kaggle!")
+
+# Load the dataset
+file_path = 'advertising.csv'  # Replace with the path where your dataset is uploaded
+data = pd.read_csv(file_path)
+
+# Display the first few rows of the dataset
+print("\nFirst 5 rows of the dataset:")
+print(data.head())
+
+# Dataset summary
+print("\nDataset Information:")
+print(data.info())
+print("\nSummary Statistics:")
+print(data.describe())
+
+# Check for missing values
+print("\nChecking for missing values...")
+print(data.isnull().sum())
+
+# Exploratory Data Analysis (EDA)
+print("\nPerforming Exploratory Data Analysis...")
+
+# Correlation Heatmap
+plt.figure(figsize=(8, 6))
+sns.heatmap(data.corr(), annot=True, cmap='coolwarm')
+plt.title("Correlation Heatmap")
+plt.show()
+
+# Pairplot for relationships
+sns.pairplot(data)
+plt.show()
+
+# Features and target split
+X = data[['TV', 'Radio', 'Newspaper']]  # Advertising spending on TV, Radio, Newspaper
+y = data['Sales']  # Sales to be predicted
+
+# Split the data into training and testing sets
+print("\nSplitting data into training (80%) and testing (20%)...")
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Model 1: Linear Regression
+print("\nTraining Linear Regression Model...")
+lr_model = LinearRegression()
+lr_model.fit(X_train, y_train)
+
+# Make predictions with Linear Regression
+lr_predictions = lr_model.predict(X_test)
+
+# Model Evaluation (Linear Regression)
+print("\nLinear Regression Model Evaluation:")
+print(f"Mean Absolute Error: {mean_absolute_error(y_test, lr_predictions):.2f}")
+print(f"Mean Squared Error: {mean_squared_error(y_test, lr_predictions):.2f}")
+print(f"R2 Score: {r2_score(y_test, lr_predictions):.2f}")
+
+# Model 2: Random Forest Regressor
+print("\nTraining Random Forest Regressor...")
+rf_model = RandomForestRegressor(random_state=42, n_estimators=100)
+rf_model.fit(X_train, y_train)
+
+# Make predictions with Random Forest
+rf_predictions = rf_model.predict(X_test)
+
+# Model Evaluation (Random Forest)
+print("\nRandom Forest Regressor Evaluation:")
+print(f"Mean Absolute Error: {mean_absolute_error(y_test, rf_predictions):.2f}")
+print(f"Mean Squared Error: {mean_squared_error(y_test, rf_predictions):.2f}")
+print(f"R2 Score: {r2_score(y_test, rf_predictions):.2f}")
+
+# Comparing predictions
+plt.figure(figsize=(10, 6))
+plt.plot(range(len(y_test)), y_test.values, label='Actual Sales', marker='o')
+plt.plot(range(len(y_test)), lr_predictions, label='Linear Regression Predictions', marker='x')
+plt.plot(range(len(y_test)), rf_predictions, label='Random Forest Predictions', marker='s')
+plt.title('Actual vs Predicted Sales')
+plt.xlabel('Sample Index')
+plt.ylabel('Sales')
+plt.legend()
+plt.grid()
+plt.show()
+
+# Display feature importance (for Random Forest)
+print("\nFeature Importance (Random Forest):")
+feature_importance = pd.DataFrame({
+    'Feature': X.columns,
+    'Importance': rf_model.feature_importances_
+}).sort_values(by='Importance', ascending=False)
+print(feature_importance)
